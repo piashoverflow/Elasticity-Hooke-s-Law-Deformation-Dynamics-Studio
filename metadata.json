@@ -1,0 +1,6 @@
+{
+  "name": "Elasticity, Hooke's Law & Deformation Dynamics Studio",
+  "description": "Comprehensive interactive physics laboratory for Young's modulus, Bulk modulus, Shear modulus, Poisson's ratio, and stress-strain dynamics with dual Bengali-English support.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
