@@ -438,13 +438,13 @@ export const Module3Shear: React.FC<Module3Props> = ({ lang }) => {
         }
         ctx.restore();
 
-        // TANGENTIAL FORCE ARROW (Fs) - Floating emerald vector
+        // TANGENTIAL FORCE ARROW (Fs) - Floating well above top face (OUTSIDE THE BLOCK)
         if (Math.abs(tangentialForceKN) > 1) {
           const dir = tangentialForceKN > 0 ? 1 : -1;
-          const arrowLen = Math.min(150, 45 + (Math.abs(tangentialForceKN) / 700) * 105);
+          const arrowLen = Math.min(145, 45 + (Math.abs(tangentialForceKN) / 700) * 100);
           const startX = p4.x + blockBaseW / 2;
           const endX = startX + dir * arrowLen;
-          const arrowY = p4.y - 18;
+          const arrowY = p4.y - 48; // Elevated well above top face
 
           ctx.strokeStyle = '#059669';
           ctx.lineWidth = 4;
@@ -465,24 +465,60 @@ export const Module3Shear: React.FC<Module3Props> = ({ lang }) => {
           ctx.stroke();
 
           const forceBadgeText = `Fs = ${tangentialForceKN > 0 ? '+' : ''}${tangentialForceKN.toFixed(0)} kN`;
-          ctx.font = 'bold 12px JetBrains Mono';
+          ctx.font = 'bold 11px JetBrains Mono';
           ctx.fillStyle = '#0f172a';
           ctx.beginPath();
-          ctx.roundRect(startX + (endX - startX) / 2 - 45, arrowY - 26, 90, 22, 6);
+          ctx.roundRect(startX + (endX - startX) / 2 - 45, arrowY - 24, 90, 20, 5);
           ctx.fill();
           ctx.strokeStyle = '#10b981';
-          ctx.lineWidth = 1.5;
+          ctx.lineWidth = 1.4;
           ctx.stroke();
 
           ctx.fillStyle = '#10b981';
           ctx.textAlign = 'center';
-          ctx.fillText(forceBadgeText, startX + (endX - startX) / 2, arrowY - 11);
+          ctx.fillText(forceBadgeText, startX + (endX - startX) / 2, arrowY - 10);
           ctx.textAlign = 'left';
         }
 
-        // SHEAR ANGLE ARC (θ)
+        // LATERAL SHIFT INDICATOR (x) - Floating above top face (OUTSIDE THE BLOCK)
         if (Math.abs(visualShiftPx) > 3) {
-          const arcRadius = 46;
+          const dimY = topY - 22; // Between top face and Fs arrow
+          ctx.strokeStyle = '#0284c7';
+          ctx.lineWidth = 2;
+
+          // Tick leader lines from top corners
+          ctx.beginPath();
+          ctx.moveTo(blockBaseX, topY - 4);
+          ctx.lineTo(blockBaseX, dimY - 4);
+          ctx.moveTo(blockBaseX + visualShiftPx, topY - 4);
+          ctx.lineTo(blockBaseX + visualShiftPx, dimY - 4);
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.moveTo(blockBaseX, dimY);
+          ctx.lineTo(blockBaseX + visualShiftPx, dimY);
+          ctx.stroke();
+
+          const shiftText = `x = ${lateralShiftMm.toFixed(2)} mm`;
+          ctx.font = 'bold 11px JetBrains Mono';
+          ctx.fillStyle = '#0f172a';
+          const shiftBadgeX = blockBaseX + visualShiftPx / 2 - 44;
+          ctx.beginPath();
+          ctx.roundRect(shiftBadgeX, dimY - 20, 88, 18, 5);
+          ctx.fill();
+          ctx.strokeStyle = '#38bdf8';
+          ctx.lineWidth = 1.2;
+          ctx.stroke();
+
+          ctx.fillStyle = '#38bdf8';
+          ctx.textAlign = 'center';
+          ctx.fillText(shiftText, shiftBadgeX + 44, dimY - 7);
+          ctx.textAlign = 'left';
+        }
+
+        // SHEAR ANGLE ARC (θ) & BADGE - PLACED STRICTLY OUTSIDE THE BLOCK
+        if (Math.abs(visualShiftPx) > 3) {
+          const arcRadius = 42;
           ctx.strokeStyle = '#f59e0b';
           ctx.lineWidth = 3;
           ctx.beginPath();
@@ -491,45 +527,45 @@ export const Module3Shear: React.FC<Module3Props> = ({ lang }) => {
           ctx.arc(blockBaseX, baseY, arcRadius, baseAngle, tiltAngle, visualShiftPx < 0);
           ctx.stroke();
 
-          const angleBadgeText = `θ = ${Math.abs(shearAngleDeg).toFixed(2)}° (${Math.abs(shearStrain).toFixed(4)} rad)`;
-          ctx.font = 'bold 12px JetBrains Mono';
+          // Angle Calculation Callout Card OUTSIDE the block to the left
+          const badgeW = 188;
+          const badgeH = 46;
+          const hasLeftSpace = blockBaseX >= badgeW + 32;
+          const badgeX = hasLeftSpace ? blockBaseX - badgeW - 20 : Math.max(12, blockBaseX - 160);
+          const badgeY = hasLeftSpace ? baseY - 60 : baseY + 26;
+
+          // Dotted leader line pointing from badge to angle arc
+          ctx.save();
+          ctx.strokeStyle = '#f59e0b';
+          ctx.lineWidth = 1.4;
+          ctx.setLineDash([3, 3]);
+          ctx.beginPath();
+          if (hasLeftSpace) {
+            ctx.moveTo(badgeX + badgeW, badgeY + badgeH / 2);
+            ctx.lineTo(blockBaseX - 4, baseY - 18);
+          } else {
+            ctx.moveTo(badgeX + badgeW / 2, badgeY);
+            ctx.lineTo(blockBaseX + 6, baseY + 6);
+          }
+          ctx.stroke();
+          ctx.restore();
+
+          // Card Container
           ctx.fillStyle = '#0f172a';
           ctx.beginPath();
-          ctx.roundRect(blockBaseX + 16, baseY - arcRadius - 26, 175, 24, 6);
+          ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 7);
           ctx.fill();
           ctx.strokeStyle = '#f59e0b';
           ctx.lineWidth = 1.5;
           ctx.stroke();
 
+          // Text lines inside card
+          ctx.font = 'bold 11px JetBrains Mono';
           ctx.fillStyle = '#f59e0b';
-          ctx.fillText(angleBadgeText, blockBaseX + 24, baseY - arcRadius - 10);
-        }
-
-        // LATERAL SHIFT INDICATOR (x)
-        if (Math.abs(visualShiftPx) > 3) {
-          const dimY = topY - 32;
-          ctx.strokeStyle = '#0284c7';
-          ctx.lineWidth = 2;
-          ctx.beginPath();
-          ctx.moveTo(blockBaseX, dimY);
-          ctx.lineTo(blockBaseX + visualShiftPx, dimY);
-          ctx.stroke();
-
-          const shiftText = `x = ${lateralShiftMm.toFixed(2)} mm`;
-          ctx.font = 'bold 12px JetBrains Mono';
-          ctx.fillStyle = '#0f172a';
-          const shiftBadgeX = blockBaseX + visualShiftPx / 2 - 45;
-          ctx.beginPath();
-          ctx.roundRect(shiftBadgeX, dimY - 24, 90, 20, 5);
-          ctx.fill();
-          ctx.strokeStyle = '#38bdf8';
-          ctx.lineWidth = 1.2;
-          ctx.stroke();
-
-          ctx.fillStyle = '#38bdf8';
-          ctx.textAlign = 'center';
-          ctx.fillText(shiftText, shiftBadgeX + 45, dimY - 10);
-          ctx.textAlign = 'left';
+          ctx.fillText(`θ = ${Math.abs(shearAngleDeg).toFixed(2)}° (${Math.abs(shearStrain).toFixed(4)} rad)`, badgeX + 9, badgeY + 18);
+          ctx.font = '10px JetBrains Mono';
+          ctx.fillStyle = '#94a3b8';
+          ctx.fillText(`θ ≈ tan θ = x / h`, badgeX + 9, badgeY + 36);
         }
       } else {
         // 3D Fracture Rupture
@@ -762,7 +798,7 @@ export const Module3Shear: React.FC<Module3Props> = ({ lang }) => {
         ctx.fillText(heightText, dimX, (topY + baseY) / 2 + 3);
         ctx.textAlign = 'left';
 
-        // 6. Top Lateral Shift Dimension (x = DD')
+        // 6. Top Lateral Shift Dimension (x = DD') - OUTSIDE ABOVE THE BLOCK
         if (Math.abs(visualShiftPx) > 3) {
           const shiftDimY = topY - 26;
           ctx.strokeStyle = '#0284c7';
@@ -770,9 +806,9 @@ export const Module3Shear: React.FC<Module3Props> = ({ lang }) => {
 
           // Vertical tick markers from D and D'
           ctx.beginPath();
-          ctx.moveTo(blockBaseX, topY - 8);
+          ctx.moveTo(blockBaseX, topY - 6);
           ctx.lineTo(blockBaseX, shiftDimY - 6);
-          ctx.moveTo(pDPrime.x, topY - 8);
+          ctx.moveTo(pDPrime.x, topY - 6);
           ctx.lineTo(pDPrime.x, shiftDimY - 6);
           ctx.stroke();
 
@@ -784,32 +820,32 @@ export const Module3Shear: React.FC<Module3Props> = ({ lang }) => {
 
           // Displacement Badge
           const shiftText2D = `x = ${lateralShiftMm.toFixed(2)} mm`;
-          ctx.font = 'bold 12px JetBrains Mono';
+          ctx.font = 'bold 11px JetBrains Mono';
           ctx.fillStyle = '#0f172a';
           const shiftMidX = (blockBaseX + pDPrime.x) / 2;
           ctx.beginPath();
-          ctx.roundRect(shiftMidX - 46, shiftDimY - 26, 92, 22, 6);
+          ctx.roundRect(shiftMidX - 45, shiftDimY - 22, 90, 20, 5);
           ctx.fill();
           ctx.strokeStyle = '#38bdf8';
-          ctx.lineWidth = 1.5;
+          ctx.lineWidth = 1.4;
           ctx.stroke();
 
           ctx.fillStyle = '#38bdf8';
           ctx.textAlign = 'center';
-          ctx.fillText(shiftText2D, shiftMidX, shiftDimY - 11);
+          ctx.fillText(shiftText2D, shiftMidX, shiftDimY - 8);
           ctx.textAlign = 'left';
         }
 
-        // 7. Tangential Shear Force Vector (Fs) along top face
+        // 7. Tangential Shear Force Vector (Fs) - FLOATING ABOVE TOP (OUTSIDE THE BLOCK)
         if (Math.abs(tangentialForceKN) > 1) {
           const dir = tangentialForceKN > 0 ? 1 : -1;
-          const arrowLen = Math.min(150, 50 + (Math.abs(tangentialForceKN) / 700) * 100);
+          const arrowLen = Math.min(145, 50 + (Math.abs(tangentialForceKN) / 700) * 95);
           const fStartX = pDPrime.x + blockBaseW / 2;
           const fEndX = fStartX + dir * arrowLen;
-          const fY = topY;
+          const fY = topY - 54; // Elevated safely above block and shift dimension
 
           ctx.strokeStyle = '#059669';
-          ctx.lineWidth = 4.5;
+          ctx.lineWidth = 4;
           ctx.beginPath();
           ctx.moveTo(fStartX, fY);
           ctx.lineTo(fEndX, fY);
@@ -819,8 +855,8 @@ export const Module3Shear: React.FC<Module3Props> = ({ lang }) => {
           ctx.fillStyle = '#10b981';
           ctx.beginPath();
           ctx.moveTo(fEndX, fY);
-          ctx.lineTo(fEndX - dir * 16, fY - 7);
-          ctx.lineTo(fEndX - dir * 16, fY + 7);
+          ctx.lineTo(fEndX - dir * 15, fY - 6.5);
+          ctx.lineTo(fEndX - dir * 15, fY + 6.5);
           ctx.closePath();
           ctx.fill();
           ctx.strokeStyle = '#047857';
@@ -829,49 +865,69 @@ export const Module3Shear: React.FC<Module3Props> = ({ lang }) => {
 
           // Force badge
           const forceBadgeText = `Fs = ${tangentialForceKN > 0 ? '+' : ''}${tangentialForceKN.toFixed(0)} kN`;
-          ctx.font = 'bold 12px JetBrains Mono';
+          ctx.font = 'bold 11px JetBrains Mono';
           ctx.fillStyle = '#0f172a';
           ctx.beginPath();
-          ctx.roundRect(fStartX + (fEndX - fStartX) / 2 - 45, fY - 32, 90, 22, 6);
+          ctx.roundRect(fStartX + (fEndX - fStartX) / 2 - 45, fY - 24, 90, 20, 5);
           ctx.fill();
           ctx.strokeStyle = '#10b981';
-          ctx.lineWidth = 1.5;
+          ctx.lineWidth = 1.4;
           ctx.stroke();
 
           ctx.fillStyle = '#10b981';
           ctx.textAlign = 'center';
-          ctx.fillText(forceBadgeText, fStartX + (fEndX - fStartX) / 2, fY - 17);
+          ctx.fillText(forceBadgeText, fStartX + (fEndX - fStartX) / 2, fY - 10);
           ctx.textAlign = 'left';
         }
 
-        // 8. Shear Angle Arc (θ) at vertex A
+        // 8. Shear Angle Arc (θ) at vertex A & BADGE - STRICTLY OUTSIDE THE BLOCK
         if (Math.abs(visualShiftPx) > 3) {
-          const arcR = 52;
+          const arcR = 48;
           ctx.strokeStyle = '#f59e0b';
-          ctx.lineWidth = 3.5;
+          ctx.lineWidth = 3;
           ctx.beginPath();
           const baseAngle = -Math.PI / 2;
           const tiltAngle = Math.atan2(-blockH, visualShiftPx);
           ctx.arc(pA.x, pA.y, arcR, baseAngle, tiltAngle, visualShiftPx < 0);
           ctx.stroke();
 
-          // Formula Badge: θ = x / h
-          const angleBadgeText = `θ = ${Math.abs(shearAngleDeg).toFixed(2)}° (${Math.abs(shearStrain).toFixed(4)} rad)`;
-          const formulaText = `tan θ ≈ θ = x / h`;
-          ctx.font = 'bold 12px JetBrains Mono';
+          // Angle Calculation Callout Card OUTSIDE the block
+          const badgeW = 195;
+          const badgeH = 46;
+          const canFitLeft = blockBaseX >= badgeW + 62;
+          const badgeX = canFitLeft ? blockBaseX - badgeW - 55 : Math.max(12, blockBaseX - 110);
+          const badgeY = canFitLeft ? baseY - 52 : baseY + 42;
+
+          // Dotted leader line pointing to angle arc at A
+          ctx.save();
+          ctx.strokeStyle = '#f59e0b';
+          ctx.lineWidth = 1.4;
+          ctx.setLineDash([3, 3]);
+          ctx.beginPath();
+          if (canFitLeft) {
+            ctx.moveTo(badgeX + badgeW, badgeY + badgeH / 2);
+            ctx.lineTo(pA.x - 4, pA.y - 18);
+          } else {
+            ctx.moveTo(badgeX + badgeW / 2, badgeY);
+            ctx.lineTo(pA.x - 4, pA.y + 4);
+          }
+          ctx.stroke();
+          ctx.restore();
+
           ctx.fillStyle = '#0f172a';
           ctx.beginPath();
-          ctx.roundRect(pA.x + 18, pA.y - arcR - 38, 185, 38, 6);
+          ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 7);
           ctx.fill();
           ctx.strokeStyle = '#f59e0b';
           ctx.lineWidth = 1.5;
           ctx.stroke();
 
-          ctx.fillStyle = '#f59e0b';
-          ctx.fillText(angleBadgeText, pA.x + 26, pA.y - arcR - 22);
           ctx.font = 'bold 11px JetBrains Mono';
+          ctx.fillStyle = '#f59e0b';
+          ctx.fillText(`θ = ${Math.abs(shearAngleDeg).toFixed(2)}° (${Math.abs(shearStrain).toFixed(4)} rad)`, badgeX + 9, badgeY + 18);
+          ctx.font = '10px JetBrains Mono';
           ctx.fillStyle = '#cbd5e1';
-          ctx.fillText(formulaText, pA.x + 26, pA.y - arcR - 6);
+          ctx.fillText(`tan θ ≈ θ = x / h`, badgeX + 9, badgeY + 36);
         }
       } else {
         // 2D Fracture Rupture
@@ -929,6 +985,40 @@ export const Module3Shear: React.FC<Module3Props> = ({ lang }) => {
         );
         ctx.textAlign = 'left';
       }
+    }
+
+    // =========================================================================
+    // LIVE PHYSICS CALCULATIONS HUD (STRICTLY OUTSIDE THE BLOCK IN TOP-RIGHT)
+    // =========================================================================
+    if (!isFractured && width > 460) {
+      const hudW = 210;
+      const hudH = 92;
+      const hudX = width - hudW - 14;
+      const hudY = 14;
+
+      ctx.save();
+      // High-contrast clean dark card
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.90)';
+      ctx.beginPath();
+      ctx.roundRect(hudX, hudY, hudW, hudH, 8);
+      ctx.fill();
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+
+      // Card Header
+      ctx.fillStyle = '#38bdf8';
+      ctx.font = 'bold 11px Plus Jakarta Sans, sans-serif';
+      ctx.fillText(lang === 'bn' ? '📐 লাইভ হিসাব (Calculations)' : '📐 Live Calculations', hudX + 10, hudY + 18);
+
+      // Metric Rows
+      ctx.font = 'bold 10px JetBrains Mono, monospace';
+      ctx.fillStyle = '#f8fafc';
+      ctx.fillText(`τ = Fs/A = ${(shearStress / 1e6).toFixed(2)} MPa`, hudX + 10, hudY + 36);
+      ctx.fillText(`θ = τ/η = ${(shearStrain).toFixed(4)} rad`, hudX + 10, hudY + 52);
+      ctx.fillText(`x = h·θ = ${(lateralShiftMm).toFixed(2)} mm`, hudX + 10, hudY + 68);
+      ctx.fillText(`η = τ/θ = ${(material.shearModulus / 1e9).toFixed(1)} GPa`, hudX + 10, hudY + 84);
+      ctx.restore();
     }
 
     ctx.restore();
